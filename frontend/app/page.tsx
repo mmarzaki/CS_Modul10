@@ -42,7 +42,6 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
 
   // Local dummy accounts sebagai fallback
   const LOCAL_ACCOUNTS = [
-    { email: 'admin@uistore.com', password: 'Admin123!', name: 'Admin' },
     { email: 'demo@uistore.com', password: 'Demo123!', name: 'Demo User' },
   ];
 
@@ -191,13 +190,16 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
                       <span className="text-amber-600 text-lg">⚠️</span>
                       <div>
                         <p className="text-sm font-bold text-amber-700">Server tidak dapat diakses</p>
-                        <p className="text-xs text-amber-600 mt-0.5">Gunakan akun lokal untuk masuk:</p>
+                        <p className="text-xs text-amber-600 mt-0.5">Gunakan akun lokal untuk masuk:
+                          <br />
+                          <br />*Disclaimer, database gw di deploy pake neonDB dan vercel buat backendnya, dari kemaren tuh literaly gacha, kadang connect dan kadang kagak bisa (banyak gabisanya),
+                          gw udah nyoba fix tapi masih tetep aja ga bisa, harap pengertiannya bang
+                        </p>
                       </div>
                     </div>
                     <div className="border-t border-amber-200 divide-y divide-amber-200">
                       {[
-                        { email: 'admin@uistore.com', password: 'Admin123!', name: 'Admin', role: '👑 Admin' },
-                        { email: 'demo@uistore.com', password: 'Demo123!', name: 'Demo User', role: '👤 Demo' },
+                        { email: 'demo', password: 'Demo123!', name: 'Demo User', role: '👤 Local' },
                       ].map((acc) => (
                         <button
                           key={acc.email}
@@ -218,7 +220,7 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
                       ))}
                     </div>
                     <div className="px-4 py-2 bg-amber-100">
-                      <p className="text-[10px] text-amber-500 text-center">Mode offline — data tidak tersinkronisasi ke server</p>
+                      <p className="text-[10px] text-amber-500 text-center">Mode offline</p>
                     </div>
                   </div>
                 )}
