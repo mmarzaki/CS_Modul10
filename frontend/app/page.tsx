@@ -467,7 +467,7 @@ function AllItemsPage({ onBack, onLogout, username }: { onBack: () => void; onLo
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
 
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const API = 'https://abyan-modul10-backend.vercel.app';
 
   React.useEffect(() => {
     const fetchItems = async () => {
