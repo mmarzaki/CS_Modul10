@@ -30,6 +30,7 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
 
   // Register state
   const [regName, setRegName] = useState('');
+  const [regUsername, setRegUsername] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirm, setRegConfirm] = useState('');
@@ -39,12 +40,18 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
 
   const API = 'https://abyan-modul10-backend.vercel.app';
 
+  // Local dummy accounts sebagai fallback
+  const LOCAL_ACCOUNTS = [
+    { email: 'admin@uistore.com', password: 'Admin123!', name: 'Admin' },
+    { email: 'demo@uistore.com', password: 'Demo123!', name: 'Demo User' },
+  ];
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     setLoginLoading(true);
+
     try {
-      // Backend route: POST /auth/login
       const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,7 +59,7 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setLoginError(data.message || 'Login failed. Check the email and password.');
+        setLoginError(data.message || 'Login failed. Check your email and password.');
         return;
       }
       const token = data.token || data.payload?.token;
@@ -61,7 +68,18 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
       localStorage.setItem('username', name);
       onLogin(name);
     } catch {
-      setLoginError('Cannot connected to the database server');
+      // Backend tidak bisa diakses — coba local fallback
+      const localUser = LOCAL_ACCOUNTS.find(
+        acc => acc.email === loginEmail && acc.password === loginPassword
+      );
+      if (localUser) {
+        localStorage.setItem('token', 'local-token');
+        localStorage.setItem('username', localUser.name);
+        onLogin(localUser.name);
+        return;
+      }
+      // Tampilkan opsi login lokal
+      setLoginError('__OFFLINE__');
     } finally {
       setLoginLoading(false);
     }
@@ -76,8 +94,16 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
       setRegError('Password dan konfirmasi tidak cocok.');
       return;
     }
-    if (regPassword.length < 6) {
-      setRegError('Password minimal 6 karakter.');
+    // Backend requires: min 10 chars, uppercase, lowercase, number, special char
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{10,}$/;
+    if (!passwordRegex.test(regPassword)) {
+      setRegError('Password minimal 10 karakter, harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial (contoh: Password1!)');
+      return;
+    }
+    // Backend requires username 3-20 chars, letters/numbers/underscores only
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(regUsername)) {
+      setRegError('Username 3-20 karakter, hanya huruf, angka, dan underscore.');
       return;
     }
 
@@ -87,7 +113,7 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
       const res = await fetch(`${API}/user/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: regName, email: regEmail, password: regPassword }),
+        body: JSON.stringify({ name: regName, username: regUsername, email: regEmail, password: regPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -152,9 +178,48 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
                 <h1 className="text-2xl font-bold text-center text-[#333] mb-1">Welcome back</h1>
                 <p className="text-center text-sm text-gray-500 mb-6">Sign in to your UI Store account</p>
 
-                {loginError && (
+                {loginError && loginError !== '__OFFLINE__' && (
                   <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
                     {loginError}
+                  </div>
+                )}
+
+                {/* OFFLINE MODE — server tidak bisa diakses */}
+                {loginError === '__OFFLINE__' && (
+                  <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 overflow-hidden">
+                    <div className="px-4 py-3 flex items-center gap-2">
+                      <span className="text-amber-600 text-lg">⚠️</span>
+                      <div>
+                        <p className="text-sm font-bold text-amber-700">Server tidak dapat diakses</p>
+                        <p className="text-xs text-amber-600 mt-0.5">Gunakan akun lokal untuk masuk:</p>
+                      </div>
+                    </div>
+                    <div className="border-t border-amber-200 divide-y divide-amber-200">
+                      {[
+                        { email: 'admin@uistore.com', password: 'Admin123!', name: 'Admin', role: '👑 Admin' },
+                        { email: 'demo@uistore.com', password: 'Demo123!', name: 'Demo User', role: '👤 Demo' },
+                      ].map((acc) => (
+                        <button
+                          key={acc.email}
+                          type="button"
+                          onClick={() => {
+                            localStorage.setItem('token', 'local-token');
+                            localStorage.setItem('username', acc.name);
+                            onLogin(acc.name);
+                          }}
+                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-amber-100 transition-colors text-left"
+                        >
+                          <div>
+                            <p className="text-sm font-bold text-amber-800">{acc.role} — {acc.name}</p>
+                            <p className="text-xs text-amber-600">{acc.email}</p>
+                          </div>
+                          <span className="text-amber-500 text-sm font-bold">Masuk →</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="px-4 py-2 bg-amber-100">
+                      <p className="text-[10px] text-amber-500 text-center">Mode offline — data tidak tersinkronisasi ke server</p>
+                    </div>
                   </div>
                 )}
 
@@ -227,9 +292,21 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
                     <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Full Name</label>
                     <input
                       type="text"
+                      placeholder="John Doe"
                       required
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Username</label>
+                    <input
+                      type="text"
+                      placeholder="john_doe123 (3-20 karakter)"
+                      required
+                      value={regUsername}
+                      onChange={(e) => setRegUsername(e.target.value)}
                       className={inputClass}
                     />
                   </div>
@@ -248,17 +325,19 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
                     <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Password</label>
                     <input
                       type="password"
-                      placeholder="Min. 6 karakter"
+                      placeholder="Min. 10 karakter, huruf besar, angka, simbol"
                       required
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       className={inputClass}
                     />
+                    <p className="text-[10px] text-gray-400 mt-1">Contoh: Password1!</p>
                   </div>
                   <div className="mb-6">
                     <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Confirm Password</label>
                     <input
                       type="password"
+                      placeholder="Ulangi password"
                       required
                       value={regConfirm}
                       onChange={(e) => setRegConfirm(e.target.value)}
