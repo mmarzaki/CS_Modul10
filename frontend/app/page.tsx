@@ -61,7 +61,7 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
       localStorage.setItem('username', name);
       onLogin(name);
     } catch {
-      setLoginError('Cannot connected to the database');
+      setLoginError('Cannot connected to the database server');
     } finally {
       setLoginLoading(false);
     }
@@ -101,7 +101,7 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
       setRegName(''); setRegEmail(''); setRegPassword(''); setRegConfirm('');
       setTimeout(() => { setMode('login'); setRegSuccess(''); }, 2000);
     } catch {
-      setRegError('Tidak dapat terhubung ke server. Coba lagi.');
+      setRegError('Cannot connected to the database');
     } finally {
       setRegLoading(false);
     }
@@ -489,7 +489,7 @@ function AllItemsPage({ onBack, onLogout, username }: { onBack: () => void; onLo
           setFetchError('Menampilkan data lokal (server tidak tersedia).');
         }
       } catch {
-        setFetchError('Tidak dapat terhubung ke server, menampilkan data lokal.');
+        setFetchError('Cannot connected to the database, menampilkan data lokal.');
       } finally {
         setLoading(false);
       }
