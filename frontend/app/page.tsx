@@ -37,7 +37,7 @@ function LoginPage({ onLogin }: { onLogin: (username: string) => void }) {
   const [regSuccess, setRegSuccess] = useState('');
   const [regLoading, setRegLoading] = useState(false);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const API = 'https://abyan-modul10-backend.vercel.app';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
